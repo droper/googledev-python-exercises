@@ -67,9 +67,26 @@ def extract_names(filename):
 
   name_list = sorted(name_list)
 
-  print '\n'.join(ranking + name_list) + '\n'
+  #print '\n'.join(ranking + name_list) + '\n'
 
   return '\n'.join(ranking + name_list) + '\n'
+
+
+def names_to_file(filenames):
+    # Suppose instead of printing the text to standard out, we want
+    # to write files containing the text. If the flag --summaryfile is present,
+    # do the following: for each input file 'foo.html', instead of printing to
+    # standard output, write a new file 'foo.html.summary' that contains the summary
+    # text for that file.
+
+    for filename in filenames:
+
+        name = filename + ".summary"
+
+        file = open(name, 'w')
+        file.write(extract_names(filename))
+        print "Created %s" % filename
+
 
 
 def main():
@@ -90,13 +107,15 @@ def main():
     summary = True
     del args[0]
 
+    names_to_file(args)
+
   # +++your code here+++
   # For each filename, get the names, then either print the text output
   # or write it to a summary file
 
   #assert extract_names(args[0])[1]=='Aaliyah 91'
 
-  extract_names(args[0])
+  #extract_names(args[0])
 
 if __name__ == '__main__':
   main()
