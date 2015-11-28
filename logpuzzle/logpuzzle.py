@@ -29,28 +29,73 @@ def read_urls(filename):
     file = open(filename,'r')
 
     #url_re = '([\w-.\/~]+)(puzzle)([\w-.]+)'
-    url_re = '([\/\w.-~\/]+)puzzle([\/\w.-\/]+)'
+    url_re = '([-\/\w.-~\/]+)puzzle([\/\w.-\/-]+)'
+
+    # Select the substring in the filename where
+    server_name = "http://" + filename[filename.find('_')+1:len(filename)]
 
     puzzles = []
 
     for line in file:
         line_match = re.search(url_re, line)
         if line_match:
-            if line_match.group() not in puzzles:
-                puzzles.append(line_match.group())
+            fullurl = server_name+line_match.group()
+            if fullurl not in puzzles:
+                puzzles.append(server_name+line_match.group())
 
-    return puzzles
+    # If the filename have the pattern "-wordchars-wordchars.jpg"
+    # in the filename as in "http://example.com/foo/puzzle/bar-abab-baaa.jpg"
+    # then the list must be sorted by the last wotd
+    imgname_re = '([\w-]+).jpg'
+
+    imgname = re.search(imgname_re, puzzles[0])
+
+    if len(imgname.group().split('-')) == 2:
+        return sorted(puzzles)
+    else:
+        return sorted(puzzles, key=lambda x: x.split('-')[-1].split('.')[-2])
+
   
 
 def download_images(img_urls, dest_dir):
-  """Given the urls already in the correct order, downloads
-  each image into the given directory.
-  Gives the images local filenames img0, img1, and so on.
-  Creates an index.html in the directory
-  with an img tag to show each local image file.
-  Creates the directory if necessary.
-  """
-  # +++your code here+++
+    """Given the urls already in the correct order, downloads
+    each image into the given directory.
+    Gives the images local filenames img0, img1, and so on.
+    Creates an index.html in the directory
+    with an img tag to show each local image file.
+    Creates the directory if necessary.
+    """
+    # +++your code here+++
+
+    # If the directory doesn't exists, create it
+    if not os.path.exists(dest_dir):
+      os.mkdir(dest_dir)
+
+    # Downloads images and saves them in the destination dir
+    # The name of an image is "img" and a number
+    base_image_name = "img"
+    counter=0
+    imgs_tags = ""
+    for img_url in img_urls:
+        image_name = base_image_name+str(counter)
+        dir_file = os.path.join(dest_dir, image_name)
+        urllib.urlretrieve(img_url, dir_file)
+        counter+=1
+        imgs_tags += '<img src="'+image_name+'">'
+        print "Retrieving...", img_url
+
+
+    # Html text
+    html_text = "<verbatim>\n <html>\n <body>\n" + imgs_tags + "\n" + "</body>\n </html>"
+
+    # Create html file
+    file = open(os.path.join(dest_dir, 'index.html'), 'w')
+    file.write(html_text)
+    file.close()
+
+
+
+
   
 
 def main():
@@ -64,8 +109,6 @@ def main():
   if args[0] == '--todir':
     todir = args[1]
     del args[0:2]
-
-  print read_urls(args[0])
 
   img_urls = read_urls(args[0])
 
